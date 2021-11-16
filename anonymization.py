@@ -14,18 +14,6 @@ from spacy import load
 NLP_EN = load("en_core_web_sm")
 
 
-
-# from main import PYTESSERACT_EXE_FILE_PATH, POPPLER_PATH, OPER_SYS
-# from .settings import PYTESSERACT_EXE_FILE_PATH, POPPLER_PATH, OPER_SYS
-
-
-# PYTESSERACT_EXE_FILE_PATH = "C:\\Users\\k4t4n\\Desktop\\hack\\tes\\tesseract.exe"  			             # Путь до tesseract
-# LIBRE_OFFICE = "C:\\Program Files\\LibreOffice\\program\\soffice.exe"					                 # Путь до LibreOffice
-# POPPLER_PATH = "C:\\Program Files\\poppler\\bin"							                             # Путь до Poppler
-# FILES_PATHS = ["C:\\Users\\k4t4n\\Desktop\\test10\\13.rtf", "C:\\Users\\k4t4n\\Desktop\\test10\\14.pdf"] # Константа списка файлов
-# OPER_SYS = "Windows" 											                                         # Операционная система
-
-
 def anonym_imgs(imgs_paths, pytesseract_exe_file_path, oper_sys="Windows", quality=220):
     '''Функция возвращает список ссылок на обработанные изображения.
     
@@ -69,27 +57,7 @@ def anonym_img(img_path):
     
     # задаем режим распознования текста
     config = "--psm 1"
-
-#    img_data = pytesseract.image_to_data(adaptive_threshold, output_type=Output.DICT, lang="eng", config=config)
-#    img_string = pytesseract.image_to_string(adaptive_threshold, output_type=Output.DICT, lang="eng", config=config)
-#
-#
-#    names = ''
-#    doc = NLP_EN(img_string['text'])
-#    for ent in doc.ents:
-#        # print(ent.text, ent.label_)
-#        if ent.label_ == 'PERSON':
-#            names += ent.text + ' '
-#    names = names.split()
-#    for i, word in enumerate(img_data['text']):
-#        for name in names:
-#            if name in word:
-#                #print(name, ":", word)
-#                x, y, w, h = img_data['left'][i], img_data['top'][i], img_data['width'][i], img_data['height'][i]
-#                img[y:y+h, x:x+w] = cv2.blur(img[y:y+h, x:x+w], (100, 100))
-#    return img
-
-
+    
     # преобразуем изображение в текстовый массив
     img_data = pytesseract.image_to_data(adaptive_threshold, output_type=Output.DICT, lang="rus", config=config)
     # print(img_data)
@@ -123,16 +91,15 @@ def anonym_dict_files(files_dicts, poppler_path, pytesseract_exe_file_path, oper
             continue
         
         file = File(file_dict["saved_path"], poppler_path, 230)
-        # file = parse_file_path(file_dict["saved_path"], oper_sys)                                      # разбиваем путь к файлу на сегменты
         if file.file_path.suffix == ".pdf":
-            print("> PDF конвертируется в изображения...")                                                      # если на вход подали pdf файл
+            print("> PDF конвертируется в изображения...")
             img_path = file.pdf_to_imgs()
-            print("> [OK] Готово")               # то получаем список путей до изображений, полученных при конвертации из pdf
-        elif file.file_path.suffix in [".docx", ".xlsx", ".doc", ".jpg", ".rtf", ".png"]:                                                   # если на вход подали docx файл
+            print("> [OK] Готово")
+        elif file.file_path.suffix in [".docx", ".xlsx", ".doc", ".jpg", ".rtf", ".png"]:
             print("> DOCX конвертируется в изображения...")
             if file.file_path.suffix == ".xlsx":
                 file.quality = 600
-            img_path = file.file_to_imgs()              # то получаем список путей до изображений, полученных при конвертации из doc
+            img_path = file.file_to_imgs()
         else:
             print("> [ERROR] Неправильный формат файла")
             file_dict["parsed_path"] = None
@@ -146,7 +113,6 @@ def anonym_dict_files(files_dicts, poppler_path, pytesseract_exe_file_path, oper
 
         print("> Конвертирование в PDF...")
         parsed_pdf_path = file.imgs_to_pdf()
-        # file_dict["parsed_path"] = parsed_pdf_path
         print("> [OK] Конвертирование в PDF завершено")
 
         all_parsed_paths.append(parsed_pdf_path)
@@ -177,12 +143,12 @@ def anonym_list_files(files_paths, poppler_path, pytesseract_exe_file_path, oper
     end_path = []
     for file_path in files_paths:
         file = File(file_path, poppler_path, 240)
-        if file.file_path.suffix == ".pdf":                                                # если на вход подали pdf файл
-            imgs_paths = file.pdf_to_imgs()               # то получаем список путей до изображений, полученных при конвертации из pdf
-        elif file.file_path.suffix in [".docx", ".xlsx", ".doc", ".rtf", ".jpg", ".png"]:                   # если на вход подали файлы всех остальных форматов
+        if file.file_path.suffix == ".pdf":
+            imgs_paths = file.pdf_to_imgs()
+        elif file.file_path.suffix in [".docx", ".xlsx", ".doc", ".rtf", ".jpg", ".png"]:
             if file.file_path.suffix == ".xlsx":
                 file.quality = 600
-            imgs_paths = file.file_to_imgs()              # то получаем список путей до изображений, полученных при конвертации из doc
+            imgs_paths = file.file_to_imgs()
         else:
             print("Exception! Йоу, не те файлы подгружаешь, мальчик")
 
