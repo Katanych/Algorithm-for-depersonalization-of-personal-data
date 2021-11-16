@@ -9,8 +9,8 @@ patterns = dict(
     only_initials = "r'^([А-ЯЁ]{1}\.\s*[А-ЯЁ]{1}\.\w*\w*\w*)'",                # Если обнаружены только инициалы с возможным пробелом между и до трех символов после. Пример: И. И.); или И.В.
     patronymic = "r'^([А-ЯЁ]{1})\w+((вич)|(вна))$'",                           # Если найдено отчество в именительном падеже
     capital_letter = "r'^([А-ЯЁ]{1})\w+'",                                     # Если найдена заглавная буква
-    one_initial = "r'^([А-ЯЁ]{1}\.\w*)'",
-    v_and_d_padechi = "r'^[А-ЯЁ]{1}\w+(((вну)|(вичу)|(вича)|(вне))(.?))$'",          # Если отчество в Винительном или Дательном падеже
+    one_initial = "r'^([А-ЯЁ]{1}\.\w*)'",                                      # Если найден только один инициал
+    v_and_d_padechi = "r'^[А-ЯЁ]{1}\w+(((вну)|(вичу)|(вича)|(вне))(.?))$'",    # Если отчество в Винительном или Дательном падеже
     quote = "r'[\"]'"
 )
 
@@ -27,15 +27,16 @@ def blur_word(img, word_coords):
     x, y, w, h = word_coords[0], word_coords[1], word_coords[2], word_coords[3]
     if x + y + w + h > 0:
         img[y:y+h, x:x+w] = cv2.blur(img[y:y+h, x:x+w], (100, 100))
-        #img[y:y+h, x:x+w] = cv2.bitwise_not(img[y:y+h, x:x+w])
-
+        #img[y:y+h, x:x+w] = cv2.bitwise_not(img[y:y+h, x:x+w]
 
 def word_satisfies_pattern(word, pattern):
     '''Проверка соответствия слова паттерну'''
+    
     return len(re.findall(eval(patterns[pattern]), word))
 
 def early_word(word, img_data):
     '''Предыдущее слово'''
+    
     if img_data['text'].index(word) - 1 == 0:
         return ""
     i = 1
@@ -58,6 +59,7 @@ def early_is_not_none(word, img_data):
     
 def after_word(word, img_data):
     '''Следующее слово'''
+    
     if img_data['text'].index(word) == len(img_data['text'])-1:
         return ""
     i = 1
@@ -71,6 +73,15 @@ def after_word(word, img_data):
     return img_data['text'][img_data['text'].index(word) + i]
 
 def blur_words(img, img_data, x=0, y=0, w=0, h=0):
+    '''Функция деперсонализации изображения.
+    
+    На вход функции подается изображения и информация о
+    словах на этом изображении.
+    Также пддерживается возможность производить размытие
+    и анализ изображения с какой-то конкретной области x, y, w, h.
+    
+    '''
+    
     # обнуляем рабочие переменные областей размытия
     word_coords = [
         (x, y, w, h),
@@ -117,7 +128,7 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
                 # если слово состоит только из инициалов, то блюрим либо предыдущее слово, либо следующее (если в нем нет ковычки),
                 elif word_satisfies_pattern(word, 'only_initials'):
                     next_word = after_word(word, img_data)
-                    print("NEXT:", next_word)
+                    # print("NEXT:", next_word)
                     if word_satisfies_pattern(next_word, 'capital_letter') and word_satisfies_pattern(next_word, 'quote') == 0 and (word2 and word and next_word) not in black_list \
                         and abs(word_coords[0][1] - img_data['top'][i+1]) < 50 and word[-1] != ',' and not (word[-1] == '.' and word[-2] == '.') \
                             and img_data['text'][img_data['text'].index(word) + 1] != ',':
@@ -132,7 +143,7 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
                     elif (word_satisfies_pattern(word2, 'capital_letter') or re.findall(r'[А-ЯЁ]', word2[1])) and word_satisfies_pattern(next_word, 'quote') == 0 and (word2 and word and next_word) not in black_list:
                         blur_word(img, word_coords[0])
                         blur_word(img, word_coords[1])
-                    print("2: ", word, word2)
+                    # print("2: ", word, word2)
                 elif (word_satisfies_pattern(word, 'v_and_d_padechi') or word_satisfies_pattern(word, 'patronymic')) \
                     and word_satisfies_pattern(word2, 'capital_letter'):
                     word3 = early_word(word2, img_data)
@@ -155,7 +166,7 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
                             w = word_coords[0][2]
                             word_coords[2] = (x2, y2-h-25, w2+w+15, h+20)
                         blur_word(img, word_coords[2])
-                    print("4: ", word, word2, word3)
+                    # print("4: ", word, word2, word3)
             elif len(word) == 2 and len(word2) == 2:
                 if word_satisfies_pattern(word, 'one_initial') and word_satisfies_pattern(word2, 'one_initial'):
                     next_word = after_word(word, img_data)
@@ -163,7 +174,7 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
                     if word_satisfies_pattern(next_word, 'quote') == 0 and (back_word and next_word) not in black_list and img_data['text'][i+1] not in black_list:
                         blur_word(img, word_coords[0])
                         blur_word(img, word_coords[1])
-                        print("5: ", word, word2)
+                        # print("5: ", word, word2)
                         blur_without_queue = True     
             
             # храним историю двух предыдущих слов
@@ -171,7 +182,8 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
             word_coords[1] = deepcopy(word_coords[0])
             word2 = word
             # print(word2)
-        # ТЕПЕРЬ ИЩЕМ ТЕЛЕФОНЫ
+        
+        # Теперь ищем номера телефонов
         if len(word) > 0:
             if word[0] in ["7", "8", "+"]: # or (word[0] == "+" and word[1] == "7"):
                 # определяем границы слова
@@ -202,7 +214,8 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
                             print("8:", word)
                             blur_word(img, word_coords[0])
                             blur_without_queue = True
-        # НУ А ТЕПЕРЬ ИЩЕМ ДАТЫ
+        
+        # А теперь ищем возможные даты
         if len(word) > 2:
             if word in ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", \
                 "августа", "сентября", "октября", "ноября", "декабря"] and after_word(word, img_data).isdigit() \
@@ -216,7 +229,8 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
             elif len(re.findall(r'^(\d\d\.\d\d\.\d)', word)) > 0 or len(re.findall(r'(\.\d\d\.\d\d)$', word)):
                 blur_word(img, word_coords[0])
                 print("10:", word)
-        # НУ А ТЕПЕРЬ ЕЩЕ СЕРИЮ И НОМЕР В ВАРИАЦИИ XXXX XXXXXX
+        
+        # А теперь ищем серию и номер паспорта формата XXXX XXXXXX
         if len(word) > 3:
             if len(re.findall(r'^(\d\d\d\d)$', word)) and len(re.findall(r'^(\d\d\d\d\d\d)$', after_word(word, img_data))):
                 word_coords[1] = img_data['left'][i+1], img_data['top'][i+1], img_data['width'][i+1], img_data['height'][i+1]
@@ -228,10 +242,5 @@ def blur_words(img, img_data, x=0, y=0, w=0, h=0):
                 blur_word(img, word_coords[1])
             elif len(re.findall(r'^(\d\d\d\d\d\d\d\d\d\d)$', word)) or len(re.findall(r'^(\d\d\d\d№\d\d\d\d\d\d)$', word)):
                 blur_word(img, word_coords[0])
-
-
-
                 
-                
-
     return img
