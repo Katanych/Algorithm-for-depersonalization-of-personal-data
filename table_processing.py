@@ -5,6 +5,7 @@ from pytesseract import pytesseract, Output
 
 
 def blur_table(img, config):
+    '''Функция деперсонализирует таблицу'''
     cImage =  copy(img)
     img_lines = is_table(img)[1]
     vertical_lines, horizontal_lines = numbers_lines(img_lines, img)
